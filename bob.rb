@@ -6,10 +6,26 @@ module Bob
       @routes = {}
     end
 
-    attr_reader :routes
+    attr_reader :routes, :request
 
     def get(path, &handler)
       route("GET", path, &handler)
+    end
+
+    def post(path, &handler)
+      route("POST", path, &handler)
+    end
+
+    def put(path, &handler)
+      route("PUT", path, &handler)
+    end
+
+    def patch(path, &handler)
+      route("PATCH", path, &handler)
+    end
+
+    def delete(path, &handler)
+      route("DELETE", path, &handler)
     end
 
     def call(env)
@@ -20,14 +36,19 @@ module Bob
       handler = @routes.fetch(verb, {}).fetch(requested_path, nil)
 
       if handler
-        instance_eval(&handler)
+        result = instance_eval(&handler)
+        if result.class == String
+          [200, {}, [result]]
+        else
+          result
+        end
       else
         [404, {}, ["Oops! no routes for #{verb} #{requested_path}"]]
       end
     end
 
     def params
-      @request.params
+      request.params
     end
 
     private
